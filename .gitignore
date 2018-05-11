@@ -1,2 +1,5 @@
 # Ignore images
 *.png
+
+# And data
+*.mat
