@@ -2,4 +2,4 @@
 *.png
 
 # And data
-*.mat
+data/
