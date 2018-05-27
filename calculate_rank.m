@@ -1,5 +1,5 @@
 function rank_obs = calculate_rank(x, x_0, f, h)
-% CALCULATE_RANK Calculate the rank of the observability matrix of a
+% CALCULATE_RANK Calculates the rank of the observability matrix of a
 % non-linear system, defined as:
 %
 %       x_dot(t) = f(x(t), u(t), t)
@@ -52,7 +52,7 @@ for i = 2:N_states
     
     % Next Lie derivative
     LfH_x = (LfH_x * f);
+    
 end
-
 
 end

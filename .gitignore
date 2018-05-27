@@ -3,3 +3,6 @@
 
 # And data
 data/
+
+# And temporary MATLAB files
+*.asv
