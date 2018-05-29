@@ -162,6 +162,8 @@ for k = 1:N
             % Construct the Jacobian H = d/dx(h(x))) with h(x) the observation model transition matrix 
             Hx = calculate_Hx(0, eta_i, U_k(:,k));  % perturbation of h(x(t), u(t), t)
             
+            % -- up to here --
+            
             % Check observability of state
             if (k == 1 && iter_N == 1)
                 rankHF = kf_calcObsRank(Hx, Fx);

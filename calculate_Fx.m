@@ -8,9 +8,12 @@ function Fx = calculate_Fx(t, x, u)
 % with ode45.
 % Jesse Hagenaars - 27.05.2018
 
-Fx = [1 0 0 0;
-      0 1 0 0;
-      0 0 1 0;
-      0 0 0 0];
+% Fx = [1 0 0 0;
+%       0 1 0 0;
+%       0 0 1 0;
+%       0 0 0 0];
+
+% Because d(x_dot)/dx = 0 (partial derivative)
+Fx = zeros(4);
 
 end
