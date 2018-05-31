@@ -1,8 +1,9 @@
 # Ignore images
 *.png
 
-# And data
+# And data, figures
 data/
+figures/
 
 # And temporary MATLAB files
 *.asv

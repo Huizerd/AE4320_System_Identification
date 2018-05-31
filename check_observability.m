@@ -22,7 +22,7 @@ N_states = length(x);
 % State transition equation: x_dot(t) = f(x(t), u(t), t) = [u(t) 0]'
 f = [u_dot; v_dot; w_dot; 0];
 
-% Observation equation: z_n(t) = h(x(t), u(t), t) derived from definitions
+% Measurement equation: z_n(t) = h(x(t), u(t), t) derived from definitions
 % of measured/true angles and velocities
 h = [atan(w/u) * (1 + C_alpha_up);
      atan(v/sqrt(u^2 + w^2));

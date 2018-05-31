@@ -12,7 +12,8 @@ close all;
 % Set simulation parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-RandStream.setDefaultStream(RandStream('mt19937ar','seed', 181));
+% RandStream.setDefaultStream(RandStream('mt19937ar','seed', 181));
+rng('default')
 
 printfigs = 0;
 doanimation = 0;
