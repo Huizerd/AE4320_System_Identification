@@ -6,12 +6,14 @@
 clear; clc
 rng('default')
 
+
 %% Load data
 
 data_name = 'data/F16traindata_CMabV_2018';
 
 % [Cm, alpha_m, beta_m, V_m, u_dot, v_dot, w_dot] = load_F16_data(data_name);
 [Cm, Z_k, U_k] = load_F16_data(data_name);
+
 
 %% Description of state transition and observation equation
 
@@ -46,10 +48,10 @@ doIEKF = 1;
 
 fprintf('\nV_m(1): %.2f m/s\nalpha_m(1): %.4f rad\nbeta_m(1): %.4f rad\n', ...
         Z_k(3, 1), Z_k(1, 1), Z_k(2, 1))  % provide intuition about initial states
-x_0 = [150; 0; 0; 1];  % initial state
+% x_0 = [150; 0; 0; 1];  % initial state
 Ex_0 = [100; 10; 10; 1];  % initial estimate, x_hat(0|0) == E{x_0} (or x_hat_0_0)
 
-N_states = length(x_0);
+N_states = length(Ex_0);
 N_input = 3;  % u_dot, v_dot, w_dot
 
 % Initial estimate for the state prediction covariance matrix
@@ -70,7 +72,7 @@ N_obs = length(sigma_v);  % number of measurements/sensors
 v_k = diag(sigma_v) * randn(N_obs, N)  + diag(Ev) * ones(N_obs, N);  % discretized matrix
 
 G = eye(N_states);  % system noise input matrix, N_states x N_states (= N_systemnoise)
-B = [eye(N_input); 0 0 0];  % input matrix, N_states x N_input
+% B = [eye(N_input); 0 0 0];  % input matrix, N_states x N_input --> not used
 
 %%% Calculate batch with measurement data %%%
 % Not necessary? --> since we already have input & measurement
@@ -107,6 +109,8 @@ P_k1_k1 = P_0_0;  % P(0|0) == E{(x_hat_0_0 - x_0) * (x_hat_0_0 - x_0)'}
 
 %%% Run the IEKF %%%
 
+tic;
+
 % Timespan for ode45
 ti = 0; 
 tf = dt;
@@ -128,7 +132,7 @@ for k = 1:N
     % Calculate the Jacobian of f(x(t), u(t), t)
     % Ain't the Jacobian 0? Since x_dot is fully determined by input -->
     % independent of x (and for Jacobian we take derivative w.r.t. x)
-    % Is this really perturbation? --------v
+    % Is this really perturbation? --------v --> yes, see slide 81
     Fx = calculate_Fx(0, x_hat_k1_k, U_k(:,k));  % perturbation of f(x(t), u(t), t)
     
     % Calculate Phi(k+1|k) and Gamma(k+1|k) (discretized state transition &
@@ -159,69 +163,110 @@ for k = 1:N
             iter_N = iter_N + 1;
             eta_i = eta_i1;
 
-            % Construct the Jacobian H = d/dx(h(x))) with h(x) the observation model transition matrix 
+            % Construct the Jacobian Hx = d/dx(h(x(t), u(t), t)) with h(x) the observation matrix 
             Hx = calculate_Hx(0, eta_i, U_k(:,k));  % perturbation of h(x(t), u(t), t)
             
-            % -- up to here --
-            
-            % Check observability of state
-            if (k == 1 && iter_N == 1)
-                rankHF = kf_calcObsRank(Hx, Fx);
-                if (rankHF < n)
-                    warning('The current state is not observable; rank of Observability Matrix is %d, should be %d', rankHF, n);
+            % Check observability of state --> check this part, might be
+            % wrong
+            if k == 1 && iter_N == 1
+                
+                % Why HF? Also, check inputs & function
+                rankHF = calculate_rank(Fx, Hx);
+                
+                if rankHF < N_states
+                    warning('The current state is not observable --> rank of observability matrix is %d, should be %d', rankHF, N_states);
                 end
+                
             end
             
-            % The innovation matrix
-            Ve  = (Hx*P_k1_k*Hx' + R);
+            % The innovation matrix (or covariance matrix of innovation, Pz(k+1|k)?)
+            % --> part of Kalman gain recalculation, see slide 110
+            Ve  = (Hx * P_k1_k * Hx' + R);  % shouldn't R be updated? R = R_k1 on slide --> no, constant noise
 
-            % calculate the Kalman gain matrix
-            K       = P_k1_k * Hx' / Ve;
-            % new observation state
-            z_p     = kf_calc_h(0, eta_i, U_k(:,k)) ;%fpr_calcYm(eta1, u);
-
-            eta_i1    = x_kk_1 + K * (Z_k(:,k) - z_p - Hx*(x_kk_1 - eta_i));
-            iter_error     = norm((eta_i1 - eta_i), inf) / norm(eta_i, inf);
+            % Calculate the Kalman gain matrix
+            K_k1 = P_k1_k * Hx' / Ve;  % is division the same as inverse? --> yes, and better
+            
+            % New observation state
+            z_p = calculate_h(0, eta_i, U_k(:,k));
+            
+            % Iterative version of the measurement update equation
+            eta_i1 = x_hat_k1_k + K_k1 * (Z_k(:,k) - z_p - Hx * (x_hat_k1_k - eta_i));
+            
+            % Compute error to check stop criteria
+            iter_error = norm((eta_i1 - eta_i), inf) / norm(eta_i, inf);
+            
         end
-
-        IEKF_COUNT(k)    = iter_N;
-        x_k_1k_1          = eta_i1;
-
-    else
-        % Correction
-        Hx = kf_calc_Hx(0, x_kk_1, U_k(:,k)); % perturbation of h(x,u,t)
-        % Pz(k+1|k) (covariance matrix of innovation)
-        Ve = (Hx*P_k1_k * Hx' + R); 
-
-        % K(k+1) (gain)
-        K = P_k1_k * Hx' / Ve;
-        % Calculate optimal state x(k+1|k+1) 
-        x_k_1k_1 = x_kk_1 + K * (Z_k(:,k) - z_kk_1); 
-
-    end    
+        
+        % Update count and state estimate
+        IEKF_COUNT(k) = iter_N;
+        x_hat_k1_k1 = eta_i1;
+        
+        % Calculate covariance matrix of state estimation error, IEKF
+        % (slide 112)
+        P_k1_k1 = (eye(N_states) - K_k1 * Hx) * P_k1_k * (eye(N_states) - K_k1 * Hx)' + K_k1 * R * K_k1';
     
-    P_k_1k_1 = (eye(n) - K*Hx) * P_k1_k * (eye(n) - K*Hx)' + K*R*K';  
-    P_cor = diag(P_k_1k_1);
-    stdx_cor = sqrt(diag(P_k_1k_1));
+    % EKF
+    else
+        
+        % Correction
+        Hx = calculate_Hx(0, x_hat_k1_k, U_k(:,k));  % perturbation of h(x,u,t)
+        
+        % Pz(k+1|k) (covariance matrix of innovation) --> check name
+        Ve = (Hx * P_k1_k * Hx' + R); 
+
+        % K(k+1) Kalman gain matrix
+        K_k1 = P_k1_k * Hx' / Ve;
+        
+        % Calculate optimal state x_hat(k+1|k+1)    
+        x_hat_k1_k1 = x_hat_k1_k + K_k1 * (Z_k(:,k) - z_k1_k);  % in slides: z(k+1) - h(x_hat(k+1|k), u(k+1)) --> different? no, correct (see z_k1_k above)
+        
+        % Calculate covariance matrix of state estimation error, EKF
+        % (slide 89)
+        P_k1_k1 = (eye(N_states) - K_k1 * Hx) * P_k1_k;
+        
+    end  
+    
+    P_cor = diag(P_k1_k1);
+    sigma_x_cor = sqrt(diag(P_k1_k1));
 
     % Next step
     ti = tf; 
     tf = tf + dt;
     
     % store results
-    XX_k1k1(:,k) = x_k_1k_1;
-%     PP_k1k1(k,:) = P_k_1k_1;
-    STDx_cor(:,k) = stdx_cor;
+    X_HAT_K1_K1(:,k) = x_hat_k1_k1;
+%     P_K1_K1(k,:) = P_k1_k1;
+    SIGMA_X_COR(:,k) = sigma_x_cor;
+    
 end
 
-time2 = toc;
+time_end = toc;
 
-% calculate state estimation error (in real life this is unknown!)
-EstErr = (XX_k1k1-X_k);
+% Calculate state estimation error (in real life this is unknown!) --> and
+% in our case?
+% estimation_error = (X_HAT_K1_K1-X_k);
+estimation_error = 0;
 
-fprintf('IEKF state estimation error RMS = %d, completed run with %d samples in %2.2f seconds.\n', sqrt(mse(EstErr)), N, time2);
+fprintf('IEKF state estimation error RMS = %d, completed run with %d samples in %2.2f seconds.\n', sqrt(mse(estimation_error)), N, time_end);
 
 
+%% Plotting
 
+figure
+plot(U_k')
 
+figure
+plot(X_HAT_K1_K1')
+ 
+figure
+plot(Z_K1_K')
+
+figure
+plot(Z_k(1, :)')
+hold on
+plot(Z_k(1, 100:end)' ./ (1 + X_HAT_K1_K1(4, 100:end)'))
+% plot(atan(X_HAT_K1_K1(3, :)' ./ X_HAT_K1_K1(1, :)') .* (1 + X_HAT_K1_K1(4, :)'))
+
+figure
+plot(IEKF_COUNT)
 

@@ -1,58 +1,31 @@
-function rank_obs = calculate_rank(x, x_0, f, h)
+function rank_obs = calculate_rank(Fx, Hx)
 % CALCULATE_RANK Calculates the rank of the observability matrix of a
-% non-linear system, defined as:
+% discretized linear system, defined as:
 %
-%       x_dot(t) = f(x(t), u(t), t)
-%       z_n(t) = h(x(t), u(t), t)
+%       x_dot(t) = Fx * x(t) + G * u(t)
+%       z_n(t) = Hx * x(t) + D * u(t)
 %
-% Jesse Hagenaars - 11.05.2018
+% Inputs are the Jacobians of f (Fx) and h (Hx). --> Or not Jacobians?
+%
+% Jesse Hagenaars - 31.05.2018
 
-N_states = length(x);
-N_obs    = length(h);
+N_states = size(Fx, 1);
 
-% Compute Jacobian of the observation equation
-H_x = simplify(jacobian(h, x));
+% Why?
+F = eye(size(Fx));
 
-% Initialize observability matrix
-obs_matrix = zeros(N_obs*N_states, N_states);
+% Observability matrix
+R = [];
 
-% Convert to symbolic matrix, rational mode
-obs = sym(obs_matrix, 'r');
-
-% Substitute Jabobian, since H_x = d_x*h
-obs(1:N_obs, :) = H_x;
-
-% Substitute x0 for x
-obs_num = subs(obs, x, x_0);
-
-% Evaluate rank of the observability matrix
-rank_obs = double(rank(obs_num));
-
-if rank_obs >= N_states
-    return
+for i = 1:N_states-1
+   R = [R; Hx * F];
+   % Why?
+   F = F * Fx;
 end
 
-% Multiply with f to get 1st Lie derivative
-LfH_x = simplify(H_x * f);
+% Why?
+R = [R; Hx * F];
 
-% Fill the observability matrix
-for i = 2:N_states
-    
-    % Compute next order Jacobian and fill in
-    LfH_x = jacobian(LfH_x, x);
-    obs((i-1)*N_obs+1:i*N_obs, :) = LfH_x;
-    
-    % Substitute x0 for x and evaluate rank again
-    obs_num = subs(obs, x, x_0);
-    rank_obs = double(rank(obs_num));
-    
-    if rank_obs >= N_states
-        return
-    end
-    
-    % Next Lie derivative
-    LfH_x = (LfH_x * f);
-    
-end
+rank_obs = rank(R);
 
 end

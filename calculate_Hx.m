@@ -4,7 +4,7 @@ function Hx = calculate_Hx(t, x, u)
 %       x_dot(t) = f(x(t), u(t), t)
 %       z_n(t) = h(x(t), u(t), t)
 %
-% Note that t, x and u are included as arguments for the function to work
+% Note that t and x are included as arguments for the function to work
 % with ode45.
 % Jesse Hagenaars - 27.05.2018
 

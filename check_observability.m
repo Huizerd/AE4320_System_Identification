@@ -29,7 +29,7 @@ h = [atan(w/u) * (1 + C_alpha_up);
      sqrt(u^2 + v^2 + w^2)];
 
 % Compute rank of the observability matrix
-rank = calculate_rank(x, x_0, f, h);
+rank = calculate_rank_nonlin(x, x_0, f, h);
 
 if rank >= N_states
     fprintf('\nObservability matrix is of full rank: the system is observable!\n');
