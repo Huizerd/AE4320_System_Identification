@@ -167,3 +167,38 @@ end
 
 plot_param_est
 
+
+%% RBF neural network
+
+%%% Network parameters %%%
+
+% Number of layers and neurons
+N_hidden_layers = 2;
+N_neurons = [4 3 3 3];  % input, hidden_1, ... , hidden_N, output
+
+% Check.. --> write function for this?
+if length(N_neurons) ~= N_hidden_layers + 2
+    warning('Discrepancy in number of hidden layers and assigned neurons')
+end
+
+% Activation functions --> check with definition in assignment
+activation_functions = {'radbas', 'radbas', 'purelin'};  % hidden_1, ... , hidden_N, output
+
+% Check..
+if length(activation_functions) ~= N_hidden_layers + 1
+    warning('Discrepancy in number of hidden layers and assigned activation functions')
+end
+
+
+
+%%% Training parameters %%%
+
+
+
+%%% Build network %%%
+
+
+
+%%% Evaluate network %%%
+
+

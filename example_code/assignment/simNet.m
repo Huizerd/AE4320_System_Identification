@@ -51,7 +51,7 @@ elseif strcmp(net.name{1,1},'rbf')
     end 
 
     %   Generating output of the hidden layer
-    Y1  = exp(-V1);
+    Y1  = 1 * exp(-V1);
 
     %   Generating output for the output layer
     Y2  = net.LW*Y1;
