@@ -1,6 +1,6 @@
 function check_observability
 % CHECK_OBSERVABILITY Checks the observability of a non-linear system,
-% defined as:
+%   defined as:
 %
 %       x_dot(t) = f(x(t), u(t), t)
 %       z_n(t) = h(x(t), u(t), t)
@@ -17,13 +17,13 @@ x_0 = [100; 10; 10; 1];  % some random values
 N_states = length(x);
 
 % Input vector: u(t) = [u_dot v_dot w_dot]' not declared due to conflict
-% with u (velocity in x)
+%   with u (velocity in x)
 
 % State transition equation: x_dot(t) = f(x(t), u(t), t) = [u(t) 0]'
 f = [u_dot; v_dot; w_dot; 0];
 
 % Measurement equation: z_n(t) = h(x(t), u(t), t) derived from definitions
-% of measured/true angles and velocities
+%   of measured/true angles and velocities
 h = [atan(w/u) * (1 + C_alpha_up);
      atan(v/sqrt(u^2 + w^2));
      sqrt(u^2 + v^2 + w^2)];

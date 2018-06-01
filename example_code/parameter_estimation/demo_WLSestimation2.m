@@ -6,7 +6,7 @@
 %   email: c.c.devisser@tudelft.nl
 %   Version: 1.0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-close all;
+close all; clear
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set simulation parameters
@@ -109,6 +109,7 @@ empvar_c_OLS = var([OLSset{1:totalRealizations,1}], 0, 2);
 
 W = diag(noiseStd0*ones(N,1));
 W(Eidx,Eidx) = noiseStdE*eye(length(Eidx));
+
     
 
 %W = diag(VarY); % define the weighting matrix

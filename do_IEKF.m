@@ -1,9 +1,12 @@
-function [X_HAT_K1_K1, Z_K1_K, IEKF_COUNT] = do_IEKF(U_k, Z_k)
+function [X_HAT_K1_K1, Z_K1_K, IEKF_COUNT] = do_IEKF(U_k, Z_k, dt, sigma_w, sigma_v)
 % DO_IEKF Estimates states using an iterated extended Kalman filter (IEKF).
 %
 % Inputs:
 % - U_k: input vector
 % - Z_k: measurement vector
+% - dt: used sample time
+% - sigma_w: system noise std. dev.
+% - sigma_v: measurement noise std. dev.
 %
 % Outputs:
 % - X_HAT_K1_K1: one-step-ahead optimal state estimation vector
@@ -14,7 +17,6 @@ function [X_HAT_K1_K1, Z_K1_K, IEKF_COUNT] = do_IEKF(U_k, Z_k)
 
 %%% Set simulation parameters %%%
 
-dt = 0.01;
 N = size(U_k, 2);
 epsilon = 1e-10;
 iter_max = 100;  % max iterations for IEKF
@@ -30,13 +32,9 @@ N_input = 3;  % u_dot, v_dot, w_dot
 P_0_0 = eye(N_states) * 0.1;
 
 % System noise statistics
-Ew = [0 0 0 0];  % noise bias, E{w(t)}, given in assignment
-sigma_w = [1e-3 1e-3 1e-3 0];  % noise variance, [u v w C_m_alpha_up], given in assignment
 Q = diag(sigma_w.^2);  % system noise covariance matrix
 
 % Measurement noise statistics:
-Ev = [0 0 0];  % noise bias, E{v(t)}, given in assignment
-sigma_v = [0.01 0.0058 0.112]; % noise variance, [alpha_m, beta_m, V_m], given in assignment
 R = diag(sigma_v.^2);  % measurement noise covariance matrix
 N_obs = length(sigma_v);  % number of measurements/sensors
 
@@ -75,11 +73,11 @@ for k = 1:N
     Z_K1_K(:, k) = z_k1_k;
 
     % Calculate the Jacobian of f(x(t), u(t), t) --> trivial, since x_dot
-    % is fully determined by input, so independent of x
+    %   is fully determined by input, so independent of x
     Fx = calculate_Fx(0, x_hat_k1_k, U_k(:,k));  % perturbation of f(x(t), u(t), t), see slide 81
     
     % Calculate Phi(k+1|k) and Gamma(k+1|k) (discretized state transition &
-    % input matrix
+    %   input matrix
     [Phi, Gamma] = c2d(Fx, G, dt);   
     
     % Calculate P(k+1|k) (prediction covariance matrix)
@@ -100,11 +98,12 @@ for k = 1:N
         iter_N = iter_N + 1;
         eta_i = eta_i1;
 
-        % Construct the Jacobian Hx = d/dx(h(x(t), u(t), t)) with h(x) the observation matrix 
+        % Construct the Jacobian Hx = d/dx(h(x(t), u(t), t)) with h(x) the
+        %   observation matrix 
         Hx = calculate_Hx(0, eta_i, U_k(:,k));  % perturbation of h(x(t), u(t), t)
 
         % Calculate the covariance matrix of innovation, P_z(k+1|k)
-        % --> part of Kalman gain recalculation, see slide 110
+        %   --> part of Kalman gain recalculation, see slide 110
         P_z  = (Hx * P_k1_k * Hx' + R);  % R is constant, since constant noise
 
         % Calculate the Kalman gain matrix
@@ -125,12 +124,11 @@ for k = 1:N
     IEKF_COUNT(k) = iter_N;
     x_hat_k1_k1 = eta_i1;
 
-    % Calculate covariance matrix of state estimation error, IEKF
-    % (slide 112)
+    % Calculate covariance matrix of state estimation error, IEKF version
+    %   (slide 112)
     P_k1_k1 = (eye(N_states) - K_k1 * Hx) * P_k1_k * (eye(N_states) - K_k1 * Hx)' + K_k1 * R * K_k1';
     
-    % Calculate covariance matrix of correction
-    P_cor = diag(P_k1_k1);
+    % Calculate std. dev. of correction
     sigma_x_cor = sqrt(diag(P_k1_k1));
 
     % Next step

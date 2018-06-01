@@ -1,6 +1,6 @@
 function rank_obs = calculate_rank_nonlin(x, x_0, f, h)
 % CALCULATE_RANK Calculates the rank of the observability matrix of a
-% non-linear system, defined as:
+%   non-linear system, defined as:
 %
 %       x_dot(t) = f(x(t), u(t), t)
 %       z_n(t) = h(x(t), u(t), t)

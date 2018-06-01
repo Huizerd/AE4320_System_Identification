@@ -1,12 +1,12 @@
 function X_dot = calculate_f(t, X, U)
 % CALCULATE_F Calculates the state (transition) matrix f, as defined in
-% the system:
+%   the system:
 %
 %       x_dot(t) = f(x(t), u(t), t)
 %       z_n(t) = h(x(t), u(t), t)
 %
 % Note that t and X are included as arguments for the function to work
-% with ode45.
+%   with ode45.
 %
 % Inputs:
 % - t: time

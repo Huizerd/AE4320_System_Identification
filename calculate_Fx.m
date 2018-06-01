@@ -5,7 +5,7 @@ function Fx = calculate_Fx(t, X, U)
 %       z_n(t) = h(x(t), u(t), t)
 %
 % Note that t, X and U are included as arguments for the function to work
-% with ode45.
+%   with ode45.
 %
 % Inputs:
 % - t: time

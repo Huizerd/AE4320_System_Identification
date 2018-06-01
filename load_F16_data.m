@@ -1,5 +1,15 @@
 function [Cm, Z_k, U_k] = load_F16_data(filename)
-% function [Cm, alpha_m, beta_m, V_m, u_dot, v_dot, w_dot] = load_F16_data(filename)
+% LOAD_F16_DATA Loads F-16 data from .mat file.
+%
+% Inputs:
+% - filename: name of data file
+%
+% Outputs:
+% - Cm: vector containg the pitching moment coefficient
+% - Z_k: measurement vector
+% - U_k: input vector
+%
+% Jesse Hagenaars - 31.05.2018
 
 load(filename, 'Cm', 'Z_k', 'U_k')
 
@@ -7,15 +17,5 @@ load(filename, 'Cm', 'Z_k', 'U_k')
 Cm = Cm';
 Z_k = Z_k';
 U_k = U_k';
-
-% Measurements Z_k = Z(t) + v(t)
-% alpha_m = Z_k(:,1);  % measured angle of attack
-% beta_m  = Z_k(:,2);  % measured angle of sideslip
-% V_m     = Z_k(:,3);  % measured velocity
-
-% Input to Kalman filter
-% u_dot = U_k(:,1);  % perfect accelerometer du/dt data
-% v_dot = U_k(:,2);  % perfect accelerometer dv/dt data
-% w_dot = U_k(:,3);  % perfect accelerometer dw/dt data
 
 end
