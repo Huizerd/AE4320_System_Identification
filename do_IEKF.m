@@ -36,7 +36,7 @@ Q = diag(sigma_w.^2);  % system noise covariance matrix
 
 % Measurement noise statistics:
 R = diag(sigma_v.^2);  % measurement noise covariance matrix
-N_obs = length(sigma_v);  % number of measurements/sensors
+N_meas = length(sigma_v);  % number of measurements/sensors
 
 G = eye(N_states);  % system noise input matrix, N_states x N_states
 
@@ -45,7 +45,7 @@ G = eye(N_states);  % system noise input matrix, N_states x N_states
 X_HAT_K1_K1 = zeros(N_states, N);
 P_K1_K1 = zeros(N_states, N);
 SIGMA_X_COR = zeros(N_states, N);  % --> look into estimation error and X_k above!
-Z_K1_K = zeros(N_obs, N);
+Z_K1_K = zeros(N_meas, N);
 IEKF_COUNT = zeros(N, 1);  % IEKF iterations for each data point
 
 % Can also be seen as x_hat(k|k) and P(k|k)

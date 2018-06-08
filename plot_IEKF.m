@@ -1,20 +1,18 @@
-% Plotting script for IEKF
+% Plotting script for IEKF.
 %
 % Jesse Hagenaars - 01.06.2018
 
-% Figures: measurements over time, bias over time, IEKF iterations,
-%   alpha vs beta
+% Fig 1: measurements
+% Raw measurements: red, after KF: blue, true alpha: green
 
 set(0, 'DefaultAxesTickLabelInterpreter','Latex')
 set(0, 'DefaultLegendInterpreter','Latex')
 set(0, 'DefaultFigurePosition', [150 150 720 800])
 
-% Fig 1: measurements
-% Raw measurements: red, after KF: blue, true alpha: green
 subplot(3, 1, 1); hold on
 plot(t, Z_k(1, :), 'r')
-plot(t, Z_k1_k(1, :), 'b')
-plot(t, Z_k1_k_corr(1, :), 'g')
+plot(t, Y_biased(1, :), 'b')
+plot(t, Y(1, :), 'g')
 ylabel('$\alpha$ [rad]', 'Interpreter', 'Latex')
 title('Measurements: $\alpha$', 'Interpreter', 'Latex', 'FontSize', 12)
 legend({'Raw measurement', 'Kalman-filtered', 'Bias-corrected'}, 'Location', 'northwest')
@@ -23,7 +21,7 @@ grid on
 
 subplot(3, 1, 2); hold on
 plot(t, Z_k(2, :), 'r')
-plot(t, Z_k1_k_corr(2, :), 'b')
+plot(t, Y(2, :), 'b')
 ylabel('$\beta$ [rad]', 'Interpreter', 'Latex')
 title('Measurements: $\beta$', 'Interpreter', 'Latex', 'FontSize', 12)
 legend({'Raw measurement', 'Kalman-filtered'}, 'Location', 'northwest')
@@ -32,9 +30,9 @@ grid on
 
 subplot(3, 1, 3); hold on
 plot(t, Z_k(3, :), 'r')
-plot(t, Z_k1_k_corr(3, :), 'b')
+plot(t, Y(3, :), 'b')
 xlabel('$t$ [s]', 'Interpreter', 'Latex')
-ylabel('$V$ [rad]', 'Interpreter', 'Latex')
+ylabel('$V$ [m/s]', 'Interpreter', 'Latex')
 title('Measurements: $V$', 'Interpreter', 'Latex', 'FontSize', 12)
 legend({'Raw measurement', 'Kalman-filtered'}, 'Location', 'northwest')
 legend('boxoff')
@@ -66,7 +64,7 @@ end
     
 % Fig 3: upwash over time
 figure
-plot(t, X_hat_k1_k1(4, :), 'b')
+plot(t, X(4, :), 'b')
 xlabel('$t$ [s]', 'Interpreter', 'Latex')
 ylabel('$C_{\alpha_{up}}$', 'Interpreter', 'Latex')
 title('States: $C_{\alpha_{up}}$', 'Interpreter', 'Latex', 'FontSize', 12)
@@ -84,8 +82,8 @@ set(0, 'DefaultFigurePosition', [150 150 720 800])
 
 figure; hold on
 plot(Z_k(1, :), Z_k(2, :), 'r')
-plot(Z_k1_k(1, :), Z_k1_k(2, :), 'b')
-plot(Z_k1_k_corr(1, :), Z_k1_k(2, :), 'g')
+plot(Y_biased(1, :), Y_biased(2, :), 'b')
+plot(Y(1, :), Y(2, :), 'g')
 xlabel('$\alpha$ [s]', 'Interpreter', 'Latex')
 ylabel('$\beta$ [rad]', 'Interpreter', 'Latex')
 title('Measurements: $\alpha$ vs $\beta$', 'Interpreter', 'Latex', 'FontSize', 12)

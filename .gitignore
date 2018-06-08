@@ -4,6 +4,7 @@
 # And data, figures
 data/
 figures/
+old/
 
 # And temporary MATLAB files
 *.asv

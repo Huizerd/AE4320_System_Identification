@@ -1,29 +1,27 @@
 % Assignment AE4320 System Identification of Aerospace Vehicles
 % Neural Networks
 %
+% Part 2: State & parameter estimation
+%
 % Jesse Hagenaars - 11.05.2018
 
 clear; close all; clc;
 rng('default')
 
-% Save figures or not
-save_fig = 1;
+% Plot/save figures or not
+do_plot = 1;
+save_fig = 0;
 
 %%% TO DO %%%
-% - Legend only in 1st graph?
-% - Check BLUEness OLS: computation of sigma^2/covariance
-% - Uselessness of WLS/GLS?
-% - Check accuracy problems due to singularity
-% - Look into colours vs --/.- for plotting
-% - Maybe make 'accuracy of fit' quantitative as well? --> model residual
-% - Whiteness of residual --> GLS?
+% - 2.5 in function
+% - theta_hat very small?
 
 
 %% Load data
 
 data_name = 'data/F16traindata_CMabV_2018';
 
-[Cm, Z_k, U_k] = load_F16_data(data_name);
+[~, Z_k, U_k] = load_F16_data(data_name);
 
 
 %% Given parameters
@@ -57,23 +55,45 @@ sigma_v = [0.01 0.0058 0.112];  % noise std. dev., [alpha_m, beta_m, V_m], given
 check_observability
 
 
-%% IEKF
-
+%% Part 2.3: Perform Kalman filtering
 % IEKF because it works very well if main non-linearities are in the
 %   measurement equation --> this is the case here (slide 20)
 
-[X_hat_k1_k1, Z_k1_k, IEKF_count] = do_IEKF(U_k, Z_k, dt, sigma_w, sigma_v);
+% Do IEKF
+% - X = X_hat_k1_k1
+% - Y = Z_k1_k
+[X, Y_biased, IEKF_count] = do_IEKF(U_k, Z_k, dt, sigma_w, sigma_v);
+
+
+%% Part 2.4: Reconstruct alpha_true
 
 % Correct alpha for bias
-Z_k1_k_corr = Z_k1_k;
-Z_k1_k_corr(1, :) = Z_k1_k(1, :) ./ (1 + X_hat_k1_k1(4, :));
+Y = Y_biased;
+Y(1, :) = Y(1, :) ./ (1 + X(4, :));
 
-%% Plotting IEKF
+% Plot results if set
+if do_plot
+    plot_IEKF
+end
 
-plot_IEKF
+% Transpose data (more suited from here on)
+X = X';
+Y = Y';
 
 
-%% Parameter estimation
+%% Split data
+
+% Fraction training data
+p_train = 0.7;
+
+% Whether or not to randomly shuffle data
+shuffle = 1;
+
+% Split states, measurements
+[X_train, X_test, Y_train, Y_test] = split_data(X, Y, p_train, shuffle);
+
+
+%% Part 2.5: Formulate regression problem + LS estimator & estimate coeff.
 
 % Look at:
 % - Influence of estimator on accuracy of fit
@@ -88,115 +108,108 @@ plot_IEKF
 %    of uncorrelated residuals?
 % 4. Validation: ...
 
-%%% Create model %%%
+% Order of polynomial model
+order = 5;
 
-% Split into identification and validation data
-split_idx = floor(size(X_hat_k1_k1, 2) / 2);  % 50:50
-[states_id, states_val] = split_data(X_hat_k1_k1', split_idx);
-[Y, Y_val] = split_data(Z_k1_k_corr', split_idx);
-[t_id, t_val] = split_data(t', split_idx);
+% Create regression matrix
+A_train = create_regression_matrix(X_train, order);
 
-% Evaluate various orders
-orders = [1 2 3];
+% Perform OLS
+[Y_hat_train, ~] = do_OLS(A_train, Y_train);
 
-% Autocorrelation 95% confidence intervals
-conf_95 = 1.96 / sqrt(size(Y, 1));
-conf_95_val = 1.96 / sqrt(size(Y_val, 1));
-
-% Number of lags
-num_lags = 500;
-
-% Create matrices to store
-Y_ORD_OLS = zeros([size(Y) length(orders)]);
-Y_VAL_ORD_OLS = zeros([size(Y_val) length(orders)]);
-EPSILON_ORD_OLS = zeros([size(Y) length(orders)]);
-EPSILON_VAL_ORD_OLS = zeros([size(Y_val) length(orders)]);
-SIGMA2_ORD_OLS = cell(2, length(orders));
-MEAN_EPSILON_ORD_OLS = cell(2, length(orders));
-MEAN_EPSILON_VAL_ORD_OLS = cell(2, length(orders));
-AC_EPSILON_ORD_OLS = zeros(num_lags * 2 + 1, size(Y, 2), length(orders));
-AC_EPSILON_VAL_ORD_OLS = zeros(num_lags * 2 + 1, size(Y, 2), length(orders));
-
-for i = 1:length(orders)
-    
-    % Create regression matrix X, for identification and validation
-    X = create_poly_model(states_id, orders(i));
-    X_val = create_poly_model(states_val, orders(i));
-     
-    %%% Ordinary least squares %%%
-
-    % OLS assumptions (necessary to make OLS BLUE):
-    % 1. residual variance is constant (E{epsilon' * epsilon} = sigma^2 * I)
-    % 2. residual is zero-mean white noise
-
-    [Y_OLS, Y_val_OLS, epsilon_OLS, epsilon_val_OLS, sigma2_OLS] = do_OLS(X, X_val, Y, Y_val);
-    
-    % Compute autocorrelation of residuals
-    [ac_epsilon_OLS, ~] = xcorr(epsilon_OLS - mean(epsilon_OLS, 1), num_lags, 'coeff');
-    [ac_epsilon_val_OLS, lags] = xcorr(epsilon_val_OLS - mean(epsilon_val_OLS, 1), num_lags, 'coeff');
-    
-    % Store
-    Y_ORD_OLS(:, :, i) = Y_OLS;
-    Y_VAL_ORD_OLS(:, :, i) = Y_val_OLS;
-    EPSILON_ORD_OLS(:, :, i) = epsilon_OLS;
-    EPSILON_VAL_ORD_OLS(:, :, i) = epsilon_val_OLS;
-    SIGMA2_ORD_OLS{1, i} = orders(i);
-    SIGMA2_ORD_OLS{2, i} = sigma2_OLS;
-    MEAN_EPSILON_ORD_OLS{1, i} = orders(i);
-    MEAN_EPSILON_ORD_OLS{2, i} = mean(epsilon_OLS, 1);
-    MEAN_EPSILON_VAL_ORD_OLS{1, i} = orders(i);
-    MEAN_EPSILON_VAL_ORD_OLS{2, i} = mean(epsilon_val_OLS, 1);
-    AC_EPSILON_ORD_OLS(:, :, i) = ac_epsilon_OLS(:, [1 5 9]);  % only autocorrelation
-    AC_EPSILON_VAL_ORD_OLS(:, :, i) = ac_epsilon_val_OLS(:, [1 5 9]);  % only autocorrelation
-
-    %%% Weighted least squares %%%
-
-    % NOT OF VERY MUCH USE? --> since we don't have variance per sample point
-
-    % Differences with OLS:
-    % - Assumes epsilon is not white
-    % - Includes a-priori information in W --> std. dev. of sensor noise
-
-    % [Y_WLS, Y_val_WLS, epsilon_WLS, epsilon_val_WLS, sigma2_WLS] = do_WLS(X, X_val, Y, Y_val, sigma_v);
-    
-    %%% Generalized Least Squares
-
+% Plot results if set
+if do_plot
+    plot_OLS
 end
 
-%% Plotting parameter estimation
 
-plot_param_est
+%% Part 2.6: Influence of polynomial model order on accuracy of fit
+% --> can be deleted: same as below
+
+% % Maximum model order to test
+% max_order = 10;
+% 
+% % Get MSE as function of order
+% MSE = MSE_for_order(X_train, Y_train, max_order);
+% 
+% % Plot results if set
+% if do_plot
+%     plot_order
+% end
 
 
-%% RBF neural network
+%% Part 2.7: Model validation --> also includes 2.6
+
+%%% Model order selection %%%
+% DISCLAIMER: due to rapidly increasing computational complexity as order
+%   increases, I only fit up to 15th-order models. The optimal order came 
+%   out as 13, which might be a local minimum.
+
+% Maximum model order to test
+max_order = 5;
+
+% Number of cross-validation folds
+folds = 10;
+
+% Get optimal OLS estimator and MSE for plotting
+[OLSE_opt, MSE] = optimize_model(X_train, X_test, Y_train, Y_test, max_order, folds);
+
+% Plot results if set
+if do_plot
+    plot_model_select
+end
+
+%%% Model-error-based validation %%%
+
+% Perform validation
+[epsilon, epsilon_ac, lags, conf_95] = model_error_validation(X_test, Y_test, OLSE_opt);
+
+% Plot results if set
+if do_plot
+    plot_model_error_validation
+end
+
+%%% Statistical validation %%%
+
+% Get parameter covariance and variance
+theta_hat_Cov = statistical_validation(X_test, Y_test, OLSE_opt);
+sigma2_theta_hat = diag(theta_hat_Cov);
+
+% Plot results if set
+if do_plot
+    plot_statistical_validation
+end
+
+
+%% Feed-forward neural network
 
 %%% Network parameters %%%
 
 % Number of layers and neurons
-N_hidden_layers = 2;
 N_neurons = [4 3 3 3];  % input, hidden_1, ... , hidden_N, output
 
-% Check.. --> write function for this?
-if length(N_neurons) ~= N_hidden_layers + 2
-    warning('Discrepancy in number of hidden layers and assigned neurons')
-end
-
 % Activation functions --> check with definition in assignment
-activation_functions = {'radbas', 'radbas', 'purelin'};  % hidden_1, ... , hidden_N, output
+activation_fns = {'tansig', 'tansig', 'purelin'};  % hidden_1, ... , hidden_N, output
 
-% Check..
-if length(activation_functions) ~= N_hidden_layers + 1
-    warning('Discrepancy in number of hidden layers and assigned activation functions')
-end
-
-
+% Bounds on input space
+input_range = [-ones(N_neurons(1), 1) ones(N_neurons(1), 1)];
 
 %%% Training parameters %%%
 
+% Levenberg-Marquardt backpropagation
+train_algo = 'trainlm';
 
+% Low-level parameters
+epochs = 100;  % max epochs during training
+goal = 0;  % training stops if goal reached
+min_grad = 1e-10;  % training stops if abs(gradient) lower than this
+mu = 0.001;  % learning rate, adapted during training --> different structure?
 
 %%% Build network %%%
 
+FF_net = build_FF_net(N_neurons, activation_fns, input_range, train_algo, epochs, goal, min_grad, mu);
+
+%%% Train network %%%
 
 
 %%% Evaluate network %%%
