@@ -20,7 +20,7 @@ clear all
 close all
 clc
 
-printfigs = 1; % 1: print figures to disk as PNG
+printfigs = 0; % 1: print figures to disk as PNG
 figpath = ''; % set the path where the figures will be printed
 
 warning('WARNING: This file was written for Matlab R2017A, some functions may not be compatible in later versions');

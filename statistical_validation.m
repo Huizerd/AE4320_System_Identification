@@ -11,12 +11,12 @@ function theta_hat_Cov = statistical_validation(X_test, Y_test, OLSE)
 %
 %       Cov{theta_hat} = inv(A' * A) * A' * E{e * e'} * A * inv(A' * A)
 %
-%   where e = epsilon (to fit equation on line). See slide 20 for
+%   where e = epsilon (to fit equation on line). See slide 60 for
 %   derivation.
 %
 % Inputs:
 % - X_test: state vector for testing, shape (N, N_states)
-% - Y_test: measurement vector for testing, shape (N, N_meas)
+% - Y_test: output vector for testing, shape (N, N_out)
 % - OLSE: struct containing theta_hat and the model order for the OLS
 %   estimator
 %

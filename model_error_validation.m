@@ -5,11 +5,11 @@ function [epsilon, epsilon_ac, lags, conf_95] = model_error_validation(X_test, Y
 %
 %       1. E{epsilon} = 0 (residual is zero-mean white noise)
 %       2. E{epsilon * epsilon'} = sigma^2 * I (residuals have constant
-%          variance for all measurements and are uncorrelated)
+%          variance for all outputs and are uncorrelated)
 %
 % Inputs:
 % - X_test: state vector for testing, shape (N, N_states)
-% - Y_test: measurement vector for testing, shape (N, N_meas)
+% - Y_test: output vector for testing, shape (N, N_out)
 % - OLSE: struct containing theta_hat and the model order for the OLS
 %   estimator
 %

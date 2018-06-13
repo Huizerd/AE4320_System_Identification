@@ -6,7 +6,7 @@ function [Y_hat, theta_hat] = do_OLS(A, Y)
 % - Y: measurement vector, shape(N, N_meas)
 %
 % Outputs:
-% - Y_hat: OLS estimate
+% - Y_hat: OLS estimate (hypothesis)
 % - theta_hat: OLS estimator
 %
 % Jesse Hagenaars - 01.06.2018

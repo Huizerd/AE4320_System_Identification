@@ -1,5 +1,5 @@
 
-dataName = 'F16traindata_CMabV_2018';
+dataName = '../../data/F16traindata_CMabV_2018';
 load(dataName, 'Cm', 'Z_k', 'U_k')
 
 % Measurements Z_k = Z(t) + v(t)

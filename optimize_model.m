@@ -4,25 +4,25 @@ function [OLSE_opt, MSE] = optimize_model(X_train, X_test, Y_train, Y_test, max_
 % Inputs:
 % - X_train: state vector for training, shape (N_train, N_states)
 % - X_test: state vector for testing, shape (N_test, N_states)
-% - Y_train: measurement vector for training, shape (N_train, N_meas)
-% - Y_test: measurement vector for testing, shape (N_test, N_meas)
+% - Y_train: output vector for training, shape (N_train, N_out)
+% - Y_test: output vector for testing, shape (N_test, N_out)
 % - max_order: maximum polynomial model order
 % - folds: number of folds for cross-validation
 %
 % Outputs:
 % - OLSE_opt: struct containing the optimal OLS estimator
 % - MSE: array containing mean-squared error for training, validation,
-%   testing, shape (max_order, N_meas, 3)
+%   testing, shape (max_order, N_out, 3)
 %
 % Jesse Hagenaars - 07.06.2018
 
-N_meas = size(Y_train, 2);
+N_out = size(Y_train, 2);
 
 % Split data into folds for cross-validation
 [X_cv, Y_cv] = fold_data(X_train, Y_train, folds);
 
 % MSE for train, validation, test
-MSE = zeros(max_order, folds, N_meas, 3);
+MSE = zeros(max_order, folds, N_out, 3);
 
 % Loop over orders
 for o = 1:max_order
@@ -54,11 +54,13 @@ for o = 1:max_order
     end   
 end
 
-% Average over folds
-MSE = squeeze(mean(MSE, 2));
+% Average over folds, squeeze 2nd dimension
+MSE = mean(MSE, 2);
+MSE = reshape(MSE, [size(MSE, 1) size(MSE, 3) size(MSE, 4)]);
 
-% Average over measurements
-MSE_avg = squeeze(mean(MSE, 3));
+% Average over outputs, squeeze 2nd dimension
+MSE_avg = mean(MSE, 2);
+MSE_avg = reshape(MSE_avg, [size(MSE_avg, 1) size(MSE_avg, 3)]);
 
 % Determine optimal order from minimal test error
 order_opt = find(MSE_avg(:, 3) == min(MSE_avg(:, 3)));

@@ -1,5 +1,5 @@
 function MSE = get_MSE(Y_hat, Y)
-% GET_MSE Computes the mean-squared error between 2 (measurement) vectors.
+% GET_MSE Computes the mean-squared error between 2 (output) vectors.
 %
 % Inputs:
 % - Y_hat: estimated vector, shape (N, N_meas)
@@ -16,7 +16,6 @@ N = size(Y, 1);
 epsilon = Y - Y_hat;
 
 % Compute MSE
-% Element-wise multiplication + sum to prevent for-loop
 MSE = 1 / N * (epsilon' * epsilon);
 
 % Select only diagonal

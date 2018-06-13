@@ -4,19 +4,19 @@ function [X_train, X_test, Y_train, Y_test] = unfold_data(X_cv, Y_cv, test_fold)
 %
 % Inputs:
 % - X_cv: folded state vector, shape (N/folds, N_states, folds)
-% - Y_cv: folded measurement vector, shape (N/folds, N_meas, folds)
+% - Y_cv: folded output vector, shape (N/folds, N_out, folds)
 % - test_fold: fold to use for testing
 %
 % Outputs:
 % - X_train: state vector for training, shape (N - (N/folds), N_states)
 % - X_test: state vector for testing, shape (N/folds, N_states)
-% - Y_train: measurement vector for training, shape (N - (N/folds), N_meas)
-% - Y_test: measurement vector for testing, shape (N/folds, N_meas)
+% - Y_train: output vector for training, shape (N - (N/folds), N_out)
+% - Y_test: output vector for testing, shape (N/folds, N_out)
 %
 % Jesse Hagenaars - 07.06.2018
 
 N_states = size(X_cv, 2);
-N_meas = size(Y_cv, 2);
+N_out = size(Y_cv, 2);
 
 % Select test data
 X_test = X_cv(:, :, test_fold);
@@ -28,6 +28,6 @@ Y_cv(:, :, test_fold) = [];
 
 % Merge training data
 X_train = reshape(permute(X_cv, [2 1 3]), N_states, [])';
-Y_train = reshape(permute(Y_cv, [2 1 3]), N_meas, [])';
+Y_train = reshape(permute(Y_cv, [2 1 3]), N_out, [])';
 
 end
