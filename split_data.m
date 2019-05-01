@@ -15,7 +15,7 @@ function [X_train, X_val, X_test, Y_train, Y_val, Y_test] = split_data(X, Y, p_t
 % - Y_train: output vector, train split
 % - Y_test: output vector, test split
 %
-% Jesse Hagenaars - 31.05.2018
+% . - 31.05.2018
 
 N = size(X, 1);
 

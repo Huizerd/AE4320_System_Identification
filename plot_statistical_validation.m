@@ -1,6 +1,6 @@
 % Plotting script for statistical validation.
 %
-% Jesse Hagenaars - 07.06.2018
+% . - 07.06.2018
 
 % Fig 1: OLS estimator parameter values and variance
 set(0, 'DefaultFigurePosition', [150 150 900 400])

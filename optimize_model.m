@@ -14,7 +14,7 @@ function [OLSE_opt, MSE] = optimize_model(X_train, X_test, Y_train, Y_test, max_
 % - MSE: array containing mean-squared error for training, validation,
 %   testing, shape (max_order, N_out, 3)
 %
-% Jesse Hagenaars - 07.06.2018
+% . - 07.06.2018
 
 N_out = size(Y_train, 2);
 

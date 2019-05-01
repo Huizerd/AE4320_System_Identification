@@ -5,7 +5,7 @@ function save_data(Z_k, C_m)
 % - Z_k: (corrected) measurement vector, shape (N_meas, N)
 % - C_m: moment coefficient vector, shape (1, N)
 %
-% Jesse Hagenaars - 08.06.2018
+% . - 08.06.2018
 
 % Measurements as states, C_m as output
 X = Z_k;

@@ -1,6 +1,6 @@
 % Plotting script for RBF neural network with linear regression.
 %
-% Jesse Hagenaars - 14.06.2018
+% . - 14.06.2018
 
 % Fig 1: output hypothesis by RBF neural network
 

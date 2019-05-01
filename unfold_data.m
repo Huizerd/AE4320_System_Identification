@@ -13,7 +13,7 @@ function [X_train, X_test, Y_train, Y_test] = unfold_data(X_cv, Y_cv, test_fold)
 % - Y_train: output vector for training, shape (N - (N/folds), N_out)
 % - Y_test: output vector for testing, shape (N/folds, N_out)
 %
-% Jesse Hagenaars - 07.06.2018
+% . - 07.06.2018
 
 N_states = size(X_cv, 2);
 N_out = size(Y_cv, 2);

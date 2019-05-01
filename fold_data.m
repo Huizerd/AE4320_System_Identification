@@ -11,7 +11,7 @@ function [X_cv, Y_cv] = fold_data(X, Y, folds)
 % - X_cv: folded state vector, shape (N/folds, N_states, folds)
 % - Y_cv: folded output vector, shape (N/folds, N_out, folds)
 %
-% Jesse Hagenaars - 07.06.2018
+% . - 07.06.2018
 
 [N, N_states] = size(X);
 N_out = size(Y, 2);

@@ -1,6 +1,6 @@
 % Plotting script for model validation.
 %
-% Jesse Hagenaars - 07.06.2018
+% . - 07.06.2018
 
 % Fig 1: histogram of residuals to check normal distribution with zero mean
 set(0, 'DefaultFigurePosition', [150 150 720 500])

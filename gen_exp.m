@@ -10,7 +10,7 @@ function exponentials = gen_exp(N_states, order)
 % - exponentials: matrix with all possible combinations of exponentials
 %   (that sum up to order) in its rows
 %
-% Jesse Hagenaars - 06.05.2018
+% . - 06.05.2018
 
 if N_states <= 1
     

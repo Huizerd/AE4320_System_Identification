@@ -1,7 +1,7 @@
 % Plotting script for RBF neural network with Levenberg-Marquardt
 %   optimization.
 %
-% Jesse Hagenaars - 14.06.2018
+% . - 14.06.2018
 
 % Fig 1: output hypothesis by RBF neural network
 

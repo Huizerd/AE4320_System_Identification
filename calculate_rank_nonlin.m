@@ -5,7 +5,7 @@ function rank_obs = calculate_rank_nonlin(x, x_0, f, h)
 %       x_dot(t) = f(x(t), u(t), t)
 %       z_n(t) = h(x(t), u(t), t)
 %
-% Jesse Hagenaars - 11.05.2018
+% . - 11.05.2018
 
 N_states = length(x);
 N_obs    = length(h);

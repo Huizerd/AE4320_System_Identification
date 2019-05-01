@@ -15,7 +15,7 @@ function Hx = calculate_Hx(t, X, U)
 % Outputs:
 % - Hx: Jacobian of h
 %
-% Jesse Hagenaars - 27.05.2018
+% . - 27.05.2018
 
 % For readability
 u = X(1); v = X(2); w = X(3); C = X(4);

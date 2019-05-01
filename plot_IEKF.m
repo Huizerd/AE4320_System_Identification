@@ -1,6 +1,6 @@
 % Plotting script for IEKF.
 %
-% Jesse Hagenaars - 01.06.2018
+% . - 01.06.2018
 
 % Fig 1: measurements
 % Raw measurements: red, after KF: blue, true alpha: green

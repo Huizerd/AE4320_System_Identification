@@ -19,7 +19,7 @@ function [epsilon, epsilon_ac, lags, conf_95] = model_error_validation(X_test, Y
 % - lags: lags for which the autocorrelation was calculated
 % - conf_95: 95% confidence interval of model residuals
 %
-% Jesse Hagenaars - 07.06.2018
+% . - 07.06.2018
 
 %%% Assumption 1 %%%
 

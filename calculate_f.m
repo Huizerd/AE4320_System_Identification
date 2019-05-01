@@ -16,7 +16,7 @@ function X_dot = calculate_f(t, X, U)
 % Outputs:
 % - X_dot: state derivative vector
 %
-% Jesse Hagenaars - 26.05.2018
+% . - 26.05.2018
 
 % f is trivial: fully defined by system input
 X_dot = [U; 0];

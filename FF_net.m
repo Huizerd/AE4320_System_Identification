@@ -1,14 +1,14 @@
-% Object definition for the radial basis function neural network.
+% Object definition for the feed-forward neural network.
 % Makes sense since network can be seen as 'object'.
 %
-% . - 09.06.2018
+% . - 15.07.2018
 
-classdef RBF_net
-    % RBF_NET Defines a radial basis function neural network.
+classdef FF_net
+    % FF_NET Defines a feed-forward neural network.
     
     properties
         
-        name = 'rbf';
+        name = 'ff';
         
         %%% Network parameters %%%
         
@@ -20,9 +20,6 @@ classdef RBF_net
         
         % Weights (no biases)
         W_1; W_2;
-        
-        % RBF center weights
-        centers;
         
         % Input bounds
         R_input;
@@ -64,8 +61,8 @@ classdef RBF_net
     
     methods
         
-        function obj = RBF_net(N_input, N_hidden, N_output, R_input, N_epochs, train_algo, mu, mu_inc, mu_dec, mu_max, goal, min_grad, activation_fn)
-            % RBF_NET Constructor method for the radial basis function
+        function obj = FF_net(N_input, N_hidden, N_output, R_input, N_epochs, train_algo, mu, mu_inc, mu_dec, mu_max, goal, min_grad, activation_fn)
+            % FF_NET Constructor method for the radial basis function
             %   neural network.
             %
             % Inputs:
@@ -78,7 +75,7 @@ classdef RBF_net
             % - train_algo: training algorithm to use
             % - mu: (adaptive) learning rate
             % - mu_inc: learning rate increase factor (for LM)
-            % - mu_dec: learning rate decrease factor (for LM)
+            % - mu_dec: learning rate decrease factor (for LM & backprop)
             % - mu_max: maximum learning rate (for LM)
             % - goal: goal to trigger training stop
             % - min_grad: minimal gradient to trigger training stop
@@ -86,9 +83,9 @@ classdef RBF_net
             %   output layers
             %
             % Outputs:
-            % - obj: object containing the RBF network
+            % - obj: object containing the FF network
             %
-            % . - 09.06.2018
+            % . - 15.07.2018
             
             % Neurons
             obj.N_input = N_input;
@@ -121,20 +118,19 @@ classdef RBF_net
         function obj = train_net(obj, data)
             % TRAIN_NET Trains the network using a certain method. Choose
             %   from:
-            %    - linregress: linear regression to optimize the RBF's
-            %      amplitude
+            %    - backprop: regular backpropagation
             %    - lm: Levenberg-Marquardt, following implementation of
             %      MATLAB's trainlm
             %
             % Inputs:
-            % - obj: object containing the RBF network
+            % - obj: object containing the FF network
             % - data: struct containing training, validation and testing
             %   data
             %
             % Outputs:
-            % - obj: object containing the (trained) RBF network
+            % - obj: object containing the (trained) FF network
             %
-            % . - 10.06.2018
+            % . - 15.07.2018
             
             % Preprocess X_train & Y_train
             [obj, X_train_pp, Y_train_pp] = data_preprocessing(obj, data.X_train, data.Y_train);
@@ -142,43 +138,32 @@ classdef RBF_net
             % Choose appropriate training algorithm
             switch obj.train_algo
                 
-                case 'linregress'
+                case 'backprop'
                     
-                    % Get RBF centers (only if empty)
-                    if isempty(obj.centers)
-                        obj = get_centers(obj, X_train_pp);
+                    % Initialize arrays to store MSE, averaged later to
+                    %   store in object (1 column for train, val, test)
+                    MSE = zeros(obj.N_epochs, 3);
+                    
+                    % Initialize array for cost function
+                    E = zeros(obj.N_epochs, 1);
+                    
+                    % Early stopping
+                    early_stop = 0;
+                    
+                    % Loop over epochs
+                    for e = 1:obj.N_epochs
+                        
+                        % Get loss (based on MSE, no regularization)
+                        Y_hat_train_pp = fw_prop(obj, X_train_pp);
+                        error = get_MSE(Y_hat_train_pp, Y_train_pp);
+                        
+                        % Store error in cost array
+                        E(e) = error;
+                        
+                        % Compute gradients
+                        grad = compute_gradients(obj, X_train_pp, Y_train_pp);
+                        
                     end
-                    
-                    % Compute outputs of input layer
-                    v_j = compute_v_j(obj, X_train_pp);
-                    
-                    % Compute outputs of hidden layer: phi_j = a * exp(-v),
-                    %   where amplitude a is determined by the hidden layer
-                    %   weights W_2
-                    phi_j = exp(-v_j);
-                    
-                    % Optimize hidden layer weights W_2 using linear
-                    %   regression
-                    % Use pinv instead of inv(X' * X) * X' to prevent
-                    %   numerical instability
-                    % obj.W_2 = pinv(phi_j' * phi_j) * phi_j' * Y_train_pp
-                    obj.W_2 = pinv(phi_j) * Y_train_pp;
-                    
-                    % Simulate for training, validation, testing
-                    % No pre- or postprocessing needed, is done inside
-                    %   sim_net
-                    Y_hat_train = sim_net(obj, data.X_train);
-                    Y_hat_val = sim_net(obj, data.X_val);
-                    Y_hat_test = sim_net(obj, data.X_test);
-                    
-                    % Store MSE in object
-                    obj.results.MSE.train = get_MSE(Y_hat_train, data.Y_train);
-                    obj.results.MSE.val = get_MSE(Y_hat_val, data.Y_val);
-                    obj.results.MSE.test = get_MSE(Y_hat_test, data.Y_test);
-                    
-                    % Also store number of epochs done, optimal epoch, etc.
-                    obj.results.N_epochs_done = 1;
-                    obj.results.N_epoch_opt = 1;
                     
                 case 'lm'
                     
@@ -188,11 +173,6 @@ classdef RBF_net
                     
                     % Initialize array for cost function
                     E = zeros(obj.N_epochs, 1);
-                    
-                    % Get RBF centers (only if empty)
-                    if isempty(obj.centers)
-                        obj = get_centers(obj, X_train_pp);
-                    end
                     
                     % Early stopping
                     early_stop = 0;
@@ -301,7 +281,7 @@ classdef RBF_net
             % - early_stop: updated counter for early stopping
             % - obj: updated object containing the RBF network
             %
-            % . - 06.07.2018
+            % . - 15.07.2018
             
             % Compute gradients
             E_grad = gradient(E);
@@ -346,24 +326,6 @@ classdef RBF_net
             
         end 
         
-        function obj = get_centers(obj, X)
-            % GET_CENTERS Finds the cluster centers for the RBFs using
-            %   k-means clustering.
-            %
-            % Inputs:
-            % - obj: object containing the RBF network
-            % - X: state vector, shape (N, N_states)
-            %
-            % Outputs:
-            % - obj: object containing the RBF network
-            %
-            % . - 10.06.2018
-            
-            % Do k-means clustering (based on squared Euclidean distance)
-            [~, obj.centers] = kmeans(X, obj.N_hidden);  
-            
-        end
-        
         function [v_j, R] = compute_v_j(obj, X)
             % COMPUTE_V_J Calculates the output of the input layer, defined
             %   as:
@@ -373,7 +335,7 @@ classdef RBF_net
             % Also outputs squared distances (needed for backprop).
             %
             % Inputs:
-            % - obj: object containing the RBF network
+            % - obj: object containing the FF network
             % - X: state vector, shape (N, N_states)
             %
             % Outputs:
@@ -381,7 +343,7 @@ classdef RBF_net
             % - R: squared distance matrix, 3rd dimension contains
             %   alpha, beta, V for alpha
             %
-            % . - 10.06.2018            
+            % . - 15.07.2018            
             
             % Squared distances from data points to centers
             % 3rd dimension contains alpha, beta, V
@@ -397,17 +359,17 @@ classdef RBF_net
         end
         
         function Y_hat = sim_net(obj, X)
-            % SIM_NET Simulates the RBF network to obtain a hypothesis.
+            % SIM_NET Simulates the FF network to obtain a hypothesis.
             %
             % Inputs:
-            % - obj: object containing the RBF network
+            % - obj: object containing the FF network
             % - X: state vector, shape (N, N_states)
             % - Y: output vector, shape (N, N_out)
             %
             % Outputs:
-            % - Y_hat: RBF network hypothesis
+            % - Y_hat: FF network hypothesis
             %
-            % . - 10.06.2018
+            % . - 15.07.2018
             
             % Preprocess state vector X
             [obj, X_pp] = data_preprocessing(obj, X);
@@ -415,7 +377,7 @@ classdef RBF_net
             % Compute outputs of input layer
             [v_j, ~] = compute_v_j(obj, X_pp);
 
-            % Compute outputs of RBF activation function
+            % Compute outputs of FF activation function
             phi_j = exp(-v_j);
             
             % Compute outputs hidden layer: v_k = sum_j(a_jk * phi_j),
@@ -426,34 +388,34 @@ classdef RBF_net
             % Output neuron is purelin: y_hat_k = v_k
             Y_hat_pp = v_k;
             
-            % Postprocess the (preprocessed) RBF network hypothesis
+            % Postprocess the (preprocessed) FF network hypothesis
             %   Y_hat_pp
             Y_hat = data_postprocessing(obj, Y_hat_pp);
             
         end
         
         function [Y_hat, phi_j, v_j, R] = fw_prop(obj, X)
-            % FW_PROP Propagates forward through the RBF network. Equal to
+            % FW_PROP Propagates forward through the FF network. Equal to
             %   sim_net, but without the pre- and postprocessing. Also
             %   gives back all intermediate layer outputs (for backprop).
             %
             % Inputs:
-            % - obj: object containing the RBF network
+            % - obj: object containing the FF network
             % - X: state vector, shape (N, N_states)
             %
             % Outputs:
             % - Y_hat: RBF network hypothesis
-            % - phi_j: output vector of the RBF activation function
+            % - phi_j: output vector of the FF activation function
             % - v_j: output vector of the input layer
             % - R: squared distance matrix, 3rd dimension contains
             %   alpha, beta, V for alpha
             %
-            % . - 14.06.2018
+            % . - 15.07.2018
             
             % Compute outputs of input layer
             [v_j, R] = compute_v_j(obj, X);
 
-            % Compute outputs of RBF activation function
+            % Compute outputs of FF activation function
             phi_j = exp(-v_j);
             
             % Compute outputs hidden layer: v_k = sum_j(a_jk * phi_j),
@@ -475,20 +437,20 @@ classdef RBF_net
             %   inliers.
             %
             % Inputs:
-            % - obj: object containing the RBF network
+            % - obj: object containing the FF network
             % - X: state vector, shape (N, N_states)
             % - varargin: variable-length list of arguments, used to pass
             %   the output vector Y, with shape (N, N_out), in case of
             %   training
             %
             % Outputs:
-            % - obj: object containing the RBF network
+            % - obj: object containing the FF network
             % - X_pp: preprocessed state vector, shape (N, N_states)
             % - varargout: variable-length list of arguments, used to pass
             %   the preprocessed output vector Y_pp, with shape (N, N_out),
             %   in case of training
             %
-            % . - 14.06.2018
+            % . - 15.07.2018
             
             % If no settings available (no preprocessing done before)
             if isempty(obj.preprocess)
@@ -536,8 +498,8 @@ classdef RBF_net
                     % Pass Y_pp as optional output, transpose back
                     varargout{1} = Y_pp';
                     
-                end 
-            end   
+                end           
+            end         
         end
         
         function Y_hat = data_postprocessing(obj, Y_hat_pp)
@@ -563,13 +525,13 @@ classdef RBF_net
             
         end
         
-        function [J, error] = compute_jacobian(obj, X, Y)
-            % COMPUTE_JACOBIAN Calculates the Jacobian matrix, which
+        function [J, error] = compute_gradients(obj, X, Y)
+            % COMPUTE_GRADIENTS Calculates the Jacobian matrix, which
             %   contains the cost function gradient of each data point
             %   w.r.t. each weight.
             %
             % Inputs:
-            % - obj: object containing the RBF network
+            % - obj: object containing the FF network
             % - X: state vector, shape (N, N_states)
             % - Y: output vector, shape (N, N_out)
             %
@@ -577,7 +539,75 @@ classdef RBF_net
             % - J: Jacobian matrix, shape (N, N_weights)
             % - error: error per sample
             %
-            % . - 14.06.2018
+            % . - 15.07.2018
+            
+            % Forward propagation
+            [Y_hat, phi_j, ~, R] = fw_prop(obj, X);
+            
+            %%% Gradient w.r.t. hidden layer weights, w_jk %%%
+            
+            % Get number of points
+            N = size(X, 1);
+            
+            % Cost function w.r.t hypothesis
+%             dE_dy_hat_k = 1 / N * (Y - Y_hat) * -1;
+            dE_dy_hat_k = (Y - Y_hat) * -1;
+            
+            % Hypothesis w.r.t. hidden layer output
+            dy_hat_k_dv_k = 1;  % since purelin
+            
+            % Hidden layer output w.r.t hidden layer weights
+            % Note that w_jk = obj.W_2 (just for notation)
+            dv_k_dw_jk = phi_j;
+            
+            % Result
+            dE_dw_jk = dE_dy_hat_k .* dy_hat_k_dv_k .* dv_k_dw_jk;
+            
+            %%% Gradient w.r.t. input layer weights, w_ij %%%
+            
+            % Hidden layer output w.r.t. hidden layer activation function
+            dv_k_dphi_j = obj.W_2;
+            
+            % Hidden layer activation function w.r.t. input layer output
+            % Derivative of exp(-v_j) = -exp(-v_j) = -phi_j
+            dphi_j_dv_j = -phi_j;
+            
+            % Input layer output w.r.t. input layer weights
+            % Note that w_ij = obj.W_1 (just for notation)
+            % Derivative of v_j = sum_i((x_i - c_ij)^2) = distance.^2
+            dv_j_dw_ij = R.^2;
+            
+            % Result
+            dE_dw_ij(:, :, 1) = dE_dy_hat_k .* dy_hat_k_dv_k * dv_k_dphi_j' .* dphi_j_dv_j .* dv_j_dw_ij(:, :, 1);
+            dE_dw_ij(:, :, 2) = dE_dy_hat_k .* dy_hat_k_dv_k * dv_k_dphi_j' .* dphi_j_dv_j .* dv_j_dw_ij(:, :, 2);
+            dE_dw_ij(:, :, 3) = dE_dy_hat_k .* dy_hat_k_dv_k * dv_k_dphi_j' .* dphi_j_dv_j .* dv_j_dw_ij(:, :, 3);
+            
+            %%% Compute Jacobian %%%
+            
+            J = [reshape(dE_dw_ij, N, obj.N_input*obj.N_hidden) dE_dw_jk];
+            
+            %%% Compute error per sample %%%
+            
+            % Based on cost function J = 1 / (2 * N) * sum((Y - Y_hat).^2)                        
+            error = 1 / 2 * (Y - Y_hat).^2;
+            
+        end
+        
+        function [J, error] = compute_jacobian(obj, X, Y)
+            % COMPUTE_JACOBIAN Calculates the Jacobian matrix, which
+            %   contains the cost function gradient of each data point
+            %   w.r.t. each weight.
+            %
+            % Inputs:
+            % - obj: object containing the FF network
+            % - X: state vector, shape (N, N_states)
+            % - Y: output vector, shape (N, N_out)
+            %
+            % Outputs:
+            % - J: Jacobian matrix, shape (N, N_weights)
+            % - error: error per sample
+            %
+            % . - 15.07.2018
             
             % Forward propagation
             [Y_hat, phi_j, ~, R] = fw_prop(obj, X);

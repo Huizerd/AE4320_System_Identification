@@ -11,7 +11,7 @@ function [Y_hat, theta_hat] = lin_regress(X, Y, order)
 % - Y_hat: OLS estimate (hypothesis), shape (N, N_out)
 % - theta_hat: OLS estimator
 %
-% Jesse Hagenaars - 08.06.2018
+% . - 08.06.2018
 
 % Create regression matrix
 A = create_regression_matrix(X, order);

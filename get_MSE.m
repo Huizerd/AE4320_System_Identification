@@ -8,7 +8,7 @@ function MSE = get_MSE(Y_hat, Y)
 % Outputs:
 % - MSE: mean-squared error
 %
-% Jesse Hagenaars - 07.06.2018
+% . - 07.06.2018
 
 N = size(Y, 1);
 
@@ -16,7 +16,7 @@ N = size(Y, 1);
 epsilon = Y - Y_hat;
 
 % Compute MSE
-MSE = 1 / N * (epsilon' * epsilon);
+MSE = 1 / (2 * N) * (epsilon' * epsilon);
 
 % Select only diagonal
 MSE = diag(MSE);

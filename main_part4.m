@@ -1,9 +1,9 @@
 % Assignment AE4320 System Identification of Aerospace Vehicles
 % Neural Networks
 %
-% Part 3: RBF neural network
+% Part 4: FF neural network
 %
-% . - 11.05.2018
+% . - 15.07.2018
 
 clear; close all; clc;
 rng('default')
@@ -13,11 +13,6 @@ do_plot = 1;
 save_fig = 0;
 
 %%% TO DO %%%
-% - Check influence of pinv vs inv
-% - Regularization? --> early stopping
-% - Adaptive learning rate?
-% - sum of dE_dy_hat_k, dv_k_dphi_j, dv_j_dw_ij or not?
-% - NN notation!
 % - weight initialization: between -1 and 1? Smart? --> 
 %   https://towardsdatascience.com/random-initialization-for-neural-networks-a-thing-of-the-past-bfcdd806bf9e
 
@@ -40,7 +35,7 @@ shuffle = 1;
 data = struct('X', X, 'X_train', X_train, 'X_val', X_val, 'X_test', X_test, 'Y', Y, 'Y_train', Y_train, 'Y_val', Y_val, 'Y_test', Y_test);
 
 
-%% Part 3.1: Formulate RBF network + linear regression
+%% Part 4.1: Formulate FF network + backprop
 
 %%% Network parameters %%%
         
@@ -55,29 +50,29 @@ R_input = [-ones(N_input, 1) ones(N_input, 1)];
 %%% Training parameters %%%
 
 % Number of epochs
-N_epochs = 0;
+N_epochs = 100;
 
 % Training algorithm
-train_algo = 'linregress';
+train_algo = 'backprop';
 
 % Learning rate
-mu = 0;
-mu_inc = 0;  % increase factor for LM
-mu_dec = 0;  % decrease factor for LM
-mu_max = 0;  % max learning rate for LM
+mu = 0.01;
+mu_inc = 1;  % increase factor for LM
+mu_dec = 0.9;  % decrease factor for LM & backprop
+mu_max = 1e10;  % max learning rate for LM
 
 % Goal (stop training when reached)
 goal = 0;
 
 % Minimal gradient (stop training when below)
-min_grad = 0;
+min_grad = 1e-10;
 
 % Activation functions
-activation_fn = {'radbas', 'purelin'};
+activation_fn = {'tansig', 'purelin'};
 
 %%% Create network %%%
 
-net = RBF_net(N_input, N_hidden, N_output, R_input, N_epochs, train_algo, mu, mu_inc, mu_dec, mu_max, goal, min_grad, activation_fn);
+net = FF_net(N_input, N_hidden, N_output, R_input, N_epochs, train_algo, mu, mu_inc, mu_dec, mu_max, goal, min_grad, activation_fn);
 
 %%% Train network %%%
 
@@ -86,11 +81,11 @@ net = train_net(net, data);
 %%% Plot results %%%
 
 if do_plot
-    plot_RBF_linregress
+    plot_FF_linregress
 end
 
 
-%% Part 3.2: Train RBF network with Levenberg-Marquardt
+%% Part 4.2: Train FF network with Levenberg-Marquardt
 
 %%% Network parameters %%%
         
@@ -105,13 +100,13 @@ R_input = [-ones(N_input, 1) ones(N_input, 1)];
 %%% Training parameters %%%
 
 % Number of epochs
-N_epochs = 1000;
+N_epochs = 100;
 
 % Training algorithm
 train_algo = 'lm';
 
 % Learning rate
-mu = 0.00001;
+mu = 0.0001;
 mu_inc = 10;  % increase factor for LM
 mu_dec = 0.1;  % decrease factor for LM
 mu_max = 1e10;  % max learning rate for LM
@@ -123,11 +118,11 @@ goal = 0;
 min_grad = 1e-10;
 
 % Activation functions
-activation_fn = {'radbas', 'purelin'};
+activation_fn = {'tansig', 'purelin'};
 
 %%% Create network %%%
 
-net = RBF_net(N_input, N_hidden, N_output, R_input, N_epochs, train_algo, mu, mu_inc, mu_dec, mu_max, goal, min_grad, activation_fn);
+net = FF_net(N_input, N_hidden, N_output, R_input, N_epochs, train_algo, mu, mu_inc, mu_dec, mu_max, goal, min_grad, activation_fn);
 
 %%% Train network %%%
 
@@ -136,41 +131,6 @@ net = train_net(net, data);
 %%% Plot results %%%
 
 if do_plot
-    plot_RBF_lm
+    plot_FF_lm
 end
-
-%% Feed-forward neural network
-
-%%% Network parameters %%%
-
-% Number of layers and neurons
-N_neurons = [4 3 3 3];  % input, hidden_1, ... , hidden_N, output
-
-% Activation functions --> check with definition in assignment
-activation_fns = {'tansig', 'tansig', 'purelin'};  % hidden_1, ... , hidden_N, output
-
-% Bounds on input space
-input_range = [-ones(N_neurons(1), 1) ones(N_neurons(1), 1)];
-
-%%% Training parameters %%%
-
-% Levenberg-Marquardt backpropagation
-train_algo = 'trainlm';
-
-% Low-level parameters
-epochs = 100;  % max epochs during training
-goal = 0;  % training stops if goal reached
-min_grad = 1e-10;  % training stops if abs(gradient) lower than this
-mu = 0.001;  % learning rate, adapted during training --> different structure?
-
-%%% Build network %%%
-
-FF_net = build_FF_net(N_neurons, activation_fns, input_range, train_algo, epochs, goal, min_grad, mu);
-
-%%% Train network %%%
-
-
-
-%%% Evaluate network %%%
-
 

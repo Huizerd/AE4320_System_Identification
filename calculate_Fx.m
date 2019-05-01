@@ -15,7 +15,7 @@ function Fx = calculate_Fx(t, X, U)
 % Outputs:
 % - Fx: Jacobian of f
 %
-% Jesse Hagenaars - 27.05.2018
+% . - 27.05.2018
 
 % Because d(x_dot)/dx = 0 (partial derivative)
 Fx = zeros(4);

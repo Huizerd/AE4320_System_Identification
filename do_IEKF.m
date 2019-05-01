@@ -13,7 +13,7 @@ function [X_HAT_K1_K1, Z_K1_K, IEKF_COUNT] = do_IEKF(U_k, Z_k, dt, sigma_w, sigm
 % - Z_K1_K: one-step-ahead measurement prediction vector
 % - IEKF_COUNT: vector containing number of IEKF iterations per sample
 %
-% Jesse Hagenaars - 31.05.2018
+% . - 31.05.2018
 
 %%% Set simulation parameters %%%
 

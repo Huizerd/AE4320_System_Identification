@@ -15,7 +15,7 @@ function Z_n = calculate_h(t, X, U)
 % Outputs:
 % - Z_n: measurement vector
 %
-% Jesse Hagenaars - 26.05.2018
+% . - 26.05.2018
 
 % For readability
 u = X(1); v = X(2); w = X(3); C = X(4);

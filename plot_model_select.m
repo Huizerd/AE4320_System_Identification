@@ -1,7 +1,7 @@
 % Plotting script for OLS mean-squared error (training, validation,
 %   testing) as a function of polynomial model order.
 %
-% Jesse Hagenaars - 07.06.2018
+% . - 07.06.2018
 
 % Fig 1: MSE (train, val, test) as function of model order
 set(0, 'DefaultFigurePosition', [150 150 720 300])

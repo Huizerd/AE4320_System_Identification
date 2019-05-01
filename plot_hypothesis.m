@@ -9,7 +9,7 @@ function plot_hypothesis(X, Y, Y_hat, save_fig, h_type)
 % - save_fig: switch whether or not to save figures
 % - h_type: string containing the type of hypothesis (for figure title)
 %
-% Jesse Hagenaars - 08.06.2018
+% . - 08.06.2018
 
 % Creating triangulation
 TRIeval = delaunayn(X(:, 1:2), {'Qbb','Qc','QJ1e-6'});

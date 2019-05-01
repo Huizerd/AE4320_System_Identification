@@ -9,7 +9,7 @@ function [Y_hat, theta_hat] = do_OLS(A, Y)
 % - Y_hat: OLS estimate (hypothesis)
 % - theta_hat: OLS estimator
 %
-% Jesse Hagenaars - 01.06.2018
+% . - 01.06.2018
 
 % OLS estimator
 % Use pinv instead of inv(X' * X) * X' to prevent numerical instability

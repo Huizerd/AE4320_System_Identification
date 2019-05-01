@@ -9,7 +9,7 @@ function A = create_regression_matrix(X, order)
 % Outputs:
 % - A: regression matrix
 %
-% Jesse Hagenaars - 06.05.2018
+% . - 06.05.2018
 
 N_states = size(X, 2);
 

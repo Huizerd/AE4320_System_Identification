@@ -23,7 +23,7 @@ function theta_hat_Cov = statistical_validation(X_test, Y_test, OLSE)
 % Outputs:
 % - theta_hat_Cov: covariance matrix of the OLS estimator parameters
 %
-% Jesse Hagenaars - 07.06.2018
+% . - 07.06.2018
 
 % Get hypothesis
 A = create_regression_matrix(X_test, OLSE.order_opt);

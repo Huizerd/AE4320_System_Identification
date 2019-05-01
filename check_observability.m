@@ -5,7 +5,7 @@ function check_observability
 %       x_dot(t) = f(x(t), u(t), t)
 %       z_n(t) = h(x(t), u(t), t)
 %
-% Jesse Hagenaars - 11.05.2018
+% . - 11.05.2018
 
 % Define symbols
 syms('u', 'v', 'w','C_alpha_up', 'u_dot', 'v_dot', 'w_dot')

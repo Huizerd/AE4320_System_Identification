@@ -9,7 +9,7 @@ function [Cm, Z_k, U_k] = load_F16_data(filename)
 % - Z_k: measurement vector
 % - U_k: input vector
 %
-% Jesse Hagenaars - 31.05.2018
+% . - 31.05.2018
 
 load(filename, 'Cm', 'Z_k', 'U_k')
 

@@ -3,7 +3,7 @@
 %
 % Part 2: State & parameter estimation
 %
-% Jesse Hagenaars - 11.05.2018
+% . - 11.05.2018
 
 clear; close all; clc;
 rng('default')
